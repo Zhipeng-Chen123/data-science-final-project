@@ -3,4 +3,5 @@ I will use data for Happiness report in 2020 and 2021 === Ratings on happiness a
 
 My main goal is to examine The correlations between happiness scores, six factors in the happiness report(levels of GDP, life expectancy, generosity, social support, freedom, and corruption) and covid factor from the covid dataset. Also, I will examine the region differences in scores and Happiness report comparison for 2020 and 2021.
 
+In this prohect, it shows my data wrangling skills and also, the use of linear regression model for data analysis.
 
