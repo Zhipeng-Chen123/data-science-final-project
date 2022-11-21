@@ -1,0 +1,186 @@
+---
+title: "final DATA SCIENCE"
+author: "Zhipeng Chen"
+date: "2022/5/4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(mdsr)
+library(readr)
+library(ggplot2)
+
+options(scipen = 999)
+```
+
+# importing data
+```{r}
+Happy2020 <- read_csv("2020.csv")
+
+Happy2021 <- read_csv("2021.csv")
+
+covidData <- read_csv("worldometer_coronavirus_summary_data.csv")
+View(worldometer_coronavirus_summary_data)
+
+summary(Happy2020)
+str(Happy2020)
+```
+
+
+
+
+# data pre-wrangling 
+```{r}
+
+Happy2021 <- Happy2021 %>%
+    arrange(desc(`Ladder score`))
+```
+
+
+
+
+# making horizontal bar chart for data visualization
+
+1. reorder data presented in the bar chart
+2. coord_flip
+3. get top 50 countries
+
+```{r}
+ggplot(data = Happy2020[1:50, ], aes(x = reorder(`Country name`, `Ladder score`), y = `Ladder score`)) +
+    geom_bar(stat='identity', position = "dodge", fill = "light blue") +
+    coord_flip() +
+    geom_text(aes(label = `Ladder score`), size = 4, hjust = -0.2) +
+    labs(x = "country name",
+         title = "Top 50 happinest countries in the world from 2019 to 2020") +
+    scale_y_continuous(limits = c(0,10)) +
+    scale_x_discrete() +
+    theme(plot.title = element_text(hjust = 4, face = "bold", size = 15),
+          plot.background = element_rect(fill = "#F0F0F0"),
+          panel.background = element_rect(color = "#F0F0F0", fill = "#F0F0F0"),
+          axis.ticks=element_line(size = 1, color = "#AFB3B3"),
+          axis.ticks.length=unit(.25, "cm"),
+          axis.text.y = element_text(vjust = 0.000001))
+```
+
+# correlations
+
+```{r}
+
+pairs(Happy2020[,3:9], main="Scatterplot Matrix of the happiness score Data",lower.panel=NULL)
+```
+We can see that there is strong positive linear relationship between the happiness score and GDP, social support, healthy life expectancy, and freedom.
+
+```{r full_model}
+full.model <- lm(Happy2020$`Ladder score` ~ Happy2020$`Logged GDP per capita`+Happy2020$`Social support`+Happy2020$`Healthy life expectancy`+Happy2020$`Freedom to make life choices`+Happy2020$Generosity+Happy2020$`Perceptions of corruption`)
+
+par(mfrow=c(1,2))
+plot(full.model,1,add.smooth=FALSE)
+plot(full.model,2)
+```
+
+
+```{r happiness_data}
+head(Happy2020, 20)
+
+head(Happy2021, 20)
+
+unique(Happy2020$`Regional indicator`)
+
+unique(Happy2021$`Regional indicator`)
+```
+
+
+# make new datasets(data wrangling)
+```{r data_}
+summary2020 <- Happy2020 %>%
+    group_by(`Regional indicator`) %>%
+    summarise(average_score = mean(`Ladder score`),
+              average_GDP = mean(`Logged GDP per capita`),
+              average_social_support = mean(`Social support`),
+              average_expetancy = mean(`Healthy life expectancy`),
+              average_freedom = mean(`Freedom to make life choices`),
+              average_generous = mean(Generosity),
+              average_corruption = mean(`Perceptions of corruption`),
+               year = 2020) 
+
+summary2020$year = as.character(summary2020$year)
+
+
+summary2021 <- Happy2021 %>%
+    group_by(`Regional indicator`) %>%
+    summarise(average_score = mean(`Ladder score`),
+              average_GDP = mean(`Logged GDP per capita`),
+              average_social_support = mean(`Social support`),
+              average_expetancy = mean(`Healthy life expectancy`),
+              average_freedom = mean(`Freedom to make life choices`),
+              average_generous = mean(Generosity),
+              average_corruption = mean(`Perceptions of corruption`),
+              year = 2021)
+    
+    summary2021$year = as.character(summary2021$year)
+    
+```
+
+
+
+# merging data
+```{r}
+total <- rbind(summary2020, summary2021)
+```
+
+
+# grouped bar chart
+
+```{r}
+ggplot(data = total, aes(group = year, fill= year, y= average_score, x= reorder(total$`Regional indicator`, average_score))) + 
+    geom_bar(position="dodge", stat="identity") +
+    labs(title = "bar chart for average score from 2020 to 2021",
+         x= "region",
+         y = "average score") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+          plot.background = element_rect(fill = "#F0F0F0"),
+        panel.background = element_rect(color = "#F0F0F0", fill = "#F0F0F0"),
+        legend.background = element_rect(color = "#F0F0F0", fill = "#F0F0F0"),
+        legend.box.background = element_rect(color = "#F0F0F0", fill = "#F0F0F0")) +
+    scale_y_continuous(limits = c(0,10),breaks =  c(0,2,4,6,8,10))
+```
+
+
+# covid and happiness score
+
+```{r left_join}
+left_join <- Happy2021 %>%
+    left_join(covidData, by = c("Country name" = "country")) 
+
+str(left_join)
+```
+
+
+
+```{r}
+ggplot(data = left_join, aes(x = `total_cases_per_1m_population`, y = `Ladder score`)) +
+    geom_point() +
+    geom_smooth()
+
+ggplot(data = left_join, aes(x = `total_deaths_per_1m_population`, y = `Ladder score`)) +
+    geom_point() +
+    geom_smooth()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
